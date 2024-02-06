@@ -80,10 +80,29 @@ impl SearchResults {
         }
     }
 
-    pub fn display(&self) {
+    pub fn display(&self, query: &str) {
         let buffer = self.format();
 
-        println!("{}", buffer.trim());
+        let highlighted_buffer = buffer
+            .lines()
+            .map(|line| {
+                if !query.is_empty() {
+                    let regex = regex::Regex::new(query).unwrap();
+                    regex
+                        .replace_all(line, |caps: &regex::Captures| {
+                            caps.get(0)
+                                .map(|m| format!("{}", m.as_str().blue()))
+                                .unwrap_or_else(|| line.to_owned())
+                        })
+                        .to_string()
+                } else {
+                    line.to_owned()
+                }
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        println!("{}", highlighted_buffer.trim());
     }
 
     pub fn format(&self) -> String {

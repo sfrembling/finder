@@ -38,6 +38,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         filetype: app.filetype,
     };
 
+    let query = options
+        .query
+        .as_ref()
+        .unwrap_or(&".".to_string())
+        .to_owned();
+
     let search = if options.query.is_some() {
         search::SearchResults::search(options)?
     } else {
@@ -50,7 +56,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         search.save(&path)?;
         println!("Results saved to {}!", path);
     } else {
-        search.display();
+        search.display(&query);
     }
 
     Ok(())
