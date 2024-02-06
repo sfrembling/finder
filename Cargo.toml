@@ -1,0 +1,23 @@
+[package]
+name = "finder"
+version = "0.1.0"
+edition = "2021"
+description = "Find your files, anywhere"
+authors = ["Shea Frembling"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bin]]
+name = "find"
+path = "src/main.rs"
+
+[dependencies]
+chrono = { version = "0.4.33", features = ["serde"] }
+clap = { version = "4.4.18", features = ["derive"] }
+colored = "2.1.0"
+directories = "5.0.1"
+indicatif = "0.17.7"
+regex = "1.10.3"
+serde = { version = "1.0.196", features = ["derive"] }
+serde_json = "1.0.113"
+walkdir = "2.4.0"
