@@ -44,6 +44,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[derive(Parser)]
+#[command(about, version)]
 struct App {
     /// Finds every file on the system and caches it for later searches.
     #[arg(long, short)]
