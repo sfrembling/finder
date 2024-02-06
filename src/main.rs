@@ -5,6 +5,7 @@ mod index;
 mod search;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let start = std::time::Instant::now();
     directory::init_fs()?;
 
     let app = App::parse();
@@ -59,6 +60,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         search.display(&query);
     }
 
+    if app.stats {
+        println!("{}", "-".repeat(50));
+        println!(
+            "{} files found in {} seconds!",
+            search.results.len(),
+            start.elapsed().as_secs_f64()
+        );
+    }
+
     Ok(())
 }
 
@@ -86,4 +96,7 @@ struct App {
     /// Filters the search results by file type.
     #[arg(long, short)]
     filetype: Option<String>,
+    /// Displays statistics about the search results.
+    #[arg(long, short = 'x')]
+    stats: bool,
 }
