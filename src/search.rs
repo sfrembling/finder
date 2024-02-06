@@ -8,6 +8,13 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[derive(Debug)]
+pub struct SearchOptions {
+    pub query: Option<String>,
+    pub path: Option<PathBuf>,
+    pub filetype: Option<String>,
+}
+
 pub struct SearchResults {
     pub results: Vec<PathBuf>,
 }
@@ -19,14 +26,14 @@ impl SearchResults {
         }
     }
 
-    pub fn search(query: &str) -> Result<Self, Box<dyn Error>> {
+    pub fn search(options: SearchOptions) -> Result<Self, Box<dyn Error>> {
         let index_path = directory::get_data_dir().join("index.json");
 
         if !index_path.exists() {
             return Err("Index does not exist. Please run `find --index` first.".into());
         }
 
-        let regex = regex::Regex::new(query)?;
+        let regex = regex::Regex::new(&options.query.unwrap())?;
         let index = index::Index::load(&index_path)?;
         let mut search = SearchResults::new();
 
@@ -37,7 +44,12 @@ impl SearchResults {
             );
         }
         let pb = index::create_spinner("Searching...");
-        for file in index.files {
+        for file in index
+            .files
+            .iter()
+            .filter(|f| Self::is_under_path(f, options.path.as_ref()))
+            .filter(|p| Self::is_filetype(p, options.filetype.as_ref()))
+        {
             if regex.is_match(&file.to_string_lossy()) {
                 let file = file.canonicalize();
                 if let Ok(file) = file {
@@ -49,15 +61,23 @@ impl SearchResults {
         Ok(search)
     }
 
-    /// Searches for a file under a specific path.
-    pub fn search_path(query: &str, path: &str) -> Result<Self, Box<dyn Error>> {
-        let mut search = Self::search(query)?;
+    fn is_under_path(file: &Path, path: Option<&PathBuf>) -> bool {
+        if let Some(p) = path {
+            file.starts_with(p)
+        } else {
+            true
+        }
+    }
 
-        let path = Path::new(path).canonicalize()?;
-
-        search.results.retain(|p| p.starts_with(&path));
-
-        Ok(search)
+    fn is_filetype(file: &Path, filetype: Option<&String>) -> bool {
+        if let Some(filetype) = filetype {
+            if let Some(ext) = file.extension() {
+                return ext == filetype.as_str();
+            }
+            false
+        } else {
+            true
+        }
     }
 
     pub fn display(&self) {

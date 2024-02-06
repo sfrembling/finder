@@ -50,8 +50,12 @@ impl Index {
     /// Builds the index by walking the file system.
     pub fn build(&mut self) -> Result<(), std::io::Error> {
         let pb = create_spinner("Building index...");
-        for entry in WalkDir::new("/").into_iter().flatten() {
-            self.add(entry.path().to_path_buf());
+        for entry in WalkDir::new("/")
+            .into_iter()
+            .flatten()
+            .flat_map(|p| p.path().canonicalize())
+        {
+            self.add(entry);
         }
 
         pb.finish_and_clear();

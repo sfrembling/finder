@@ -24,20 +24,33 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("Index built!");
     }
 
-    let results = if let Some(query) = app.search {
-        match app.path {
-            Some(path) => search::SearchResults::search_path(&query, &path)?,
-            None => search::SearchResults::search(&query)?,
-        }
+    let options = search::SearchOptions {
+        query: app.search,
+        path: {
+            if let Some(path) = app.path {
+                let p = std::path::Path::new(&path);
+                let p = p.canonicalize()?;
+                Some(p)
+            } else {
+                None
+            }
+        },
+        filetype: app.filetype,
+    };
+
+    let search = if options.query.is_some() {
+        search::SearchResults::search(options)?
     } else {
         return Ok(());
     };
 
-    if let Some(path) = app.serialize {
-        results.save(&path)?;
+    if app.count {
+        println!("{} files found!", search.results.len());
+    } else if let Some(path) = app.serialize {
+        search.save(&path)?;
         println!("Results saved to {}!", path);
     } else {
-        results.display();
+        search.display();
     }
 
     Ok(())
@@ -49,7 +62,7 @@ struct App {
     /// Finds every file on the system and caches it for later searches.
     #[arg(long, short)]
     index: bool,
-    /// Searches your system for a file.
+    /// Searches your system for a file. Accepts a RegEx pattern.
     #[arg(long, short)]
     search: Option<String>,
     /// An optional path to search under.
@@ -61,4 +74,10 @@ struct App {
     /// Saves the search results to a file.
     #[arg(long, short = 'w')]
     serialize: Option<String>,
+    /// Counts the number of files found.
+    #[arg(long, short = 'l')]
+    count: bool,
+    /// Filters the search results by file type.
+    #[arg(long, short)]
+    filetype: Option<String>,
 }
