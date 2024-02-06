@@ -8,7 +8,7 @@ authors = ["Shea Frembling"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [[bin]]
-name = "find"
+name = "fnd"
 path = "src/main.rs"
 
 [dependencies]
